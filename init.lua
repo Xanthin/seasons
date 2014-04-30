@@ -69,6 +69,38 @@ local cur_season = ""
     end
 end]]
 
+-----------------------------------------------
+-- privilege and chatcommand for easy season changes
+-----------------------------------------------
+
+minetest.register_privilege("seasons", {
+description = "Change the season",
+give_to_singleplayer = false
+})
+
+-- Set the season
+minetest.register_chatcommand("setseason", {
+    params = "<0...3>",
+    description = "Set season to 0(spring),1(summer),2(autumn),3(winter)", -- full description
+    privs = {seasons = true},
+    func = function(name, param)
+        if param == "" then
+            minetest.chat_send_player(name, "Missing parameter")
+            return
+        end
+        local newseason = tonumber(param)
+        --if newseason == nil then
+            --minetest.chat_send_player(name, "Invalid season")
+        if newseason > 3 then
+            minetest.chat_send_player(name, "Wrong parameter")
+        else
+            set_season_time(newseason % 4)
+            minetest.chat_send_player(name, "Season changed.")
+            minetest.log("action", name .. " sets season to " .. newseason)
+        end
+    end,
+})
+
 minetest.register_node("seasons:treehead", {
     tile_images = {"default_tree_top.png", "default_tree_top.png", "default_tree.png"},
     inventory_image = minetest.inventorycube("default_tree_top.png", "default_tree.png", "default_tree.png"),
