@@ -127,17 +127,17 @@ minetest.register_node("seasons:autumn_leaves", {
     dug_item = ''
 })
 
-minetest.register_node("seasons:autumn_falling_leaves", {
+--[[minetest.register_node("seasons:autumn_falling_leaves", {
+    description = "Autumn Falling Leaves",
     drawtype = "allfaces_optional",
     visual_scale = 1.3,
-    tile_images = {"seasons_autumn_leaves.png"},
-    inventory_image = minetest.inventorycube("seasons_autumn_leaves.png"),
+    tiles = {"seasons_autumn_leaves.png"},
     paramtype = "light",
-    material = minetest.digprop_leaveslike(0.5),
-    dug_item = ''
-})
-
-default.register_falling_node("seasons:autumn_falling_leaves", "seasons_autumn_leaves.png")
+    waving = 1,
+    is_ground_content = false,
+    groups = {snappy=3, leafdecay=3, flammable=2, leaves=1, falling_node = 1, not_in_creative_inventory=1},
+    sounds = default.node_sound_leaves_defaults(),
+})]]
 
 minetest.register_node("seasons:snow", {
     drawtype = "signlike",
@@ -264,7 +264,7 @@ minetest.register_abm({
     end
 })
 
--- leaves fall in autumn
+--[[ leaves fall in autumn:
 minetest.register_abm({
     nodenames = {"seasons:autumn_leaves"},
     neighbors = {"air"},
@@ -282,7 +282,7 @@ minetest.register_abm({
             end
         end
     end
-})
+})]]
 
 local function sign(x)
     if x > 0 then
@@ -433,8 +433,9 @@ minetest.register_abm({
     end
 })
 
+-- auskommentiert, weil keine blätter fallen sollen
 minetest.register_abm({
-    nodenames = {"seasons:autumn_leaves", "seasons:autumn_falling_leaves"},
+    nodenames = {"seasons:autumn_leaves"--[[, "seasons:autumn_falling_leaves"]]},
     interval = 3.0,
     chance = 1,
     action = function(pos, node)
