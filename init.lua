@@ -607,6 +607,18 @@ minetest.register_abm({
     end
 })
 
+minetest.register_abm({
+    nodenames = {"group:flora"},
+    neighbors = {"seasons:snow", "seasons:ice"},
+    interval = 3.0,
+    chance = 1,
+    action = function(pos, node)
+        if cur_season == "winter" then
+            minetest.env:remove_node(pos)
+        end
+    end
+})
+
 -----------------------------------------------
 -- snowfall im Winter und raindrops im Herbst
 -----------------------------------------------
