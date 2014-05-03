@@ -325,6 +325,10 @@ minetest.register_globalstep(function(dtime)
     end
 end)
 
+--------
+-- abm
+--------
+
 -- leaves become orange in autumn
 minetest.register_abm({
     nodenames = {"default:leaves"},
@@ -413,6 +417,68 @@ minetest.register_abm({
         end
     end
 })
+
+-- flowers grow in spring from default flowers\init.lua i=50,chance=25
+minetest.register_abm({
+    nodenames = {"group:flora"},
+    neighbors = {"default:dirt_with_grass", "default:desert_sand"},
+    interval = 2,
+    chance = 5,
+    action = function(pos, node)
+        if cur_season == "spring" then
+            print("Spring time!")
+            pos.y = pos.y - 1
+            local under = minetest.get_node(pos)
+            pos.y = pos.y + 1
+            if under.name == "default:desert_sand" then
+                minetest.set_node(pos, {name="default:dry_shrub"})
+            elseif under.name ~= "default:dirt_with_grass" then
+                return
+            end
+        
+            local light = minetest.get_node_light(pos)
+            if not light or light < 13 then
+                return
+            end
+        
+            local pos0 = {x=pos.x-4,y=pos.y-4,z=pos.z-4}
+            local pos1 = {x=pos.x+4,y=pos.y+4,z=pos.z+4}
+            if #minetest.find_nodes_in_area(pos0, pos1, "group:flora_block") > 0 then
+            return
+            end
+        
+            local flowers = minetest.find_nodes_in_area(pos0, pos1, "group:flora")
+            if #flowers > 3 then
+                return
+            end
+        
+            local seedling = minetest.find_nodes_in_area(pos0, pos1, "default:dirt_with_grass")
+            if #seedling > 0 then
+                seedling = seedling[math.random(#seedling)]
+                seedling.y = seedling.y + 1
+                light = minetest.get_node_light(seedling)
+                if not light or light < 13 then
+                    return
+                end
+                if minetest.get_node(seedling).name == "air" then
+                    minetest.set_node(seedling, {name=node.name})
+                end
+            end
+        end
+    end,
+})
+
+--[[minetest.register_abm({
+    nodenames = {"group:flora"},
+    neighbors = {"air", "default:dirt_with_grass"},
+    interval = 3.0,
+    chance = 1,
+    action = function(pos, node)
+        if cur_season ~= "winter" then
+            minetest.env:add_node(pos, {name = 'group:flora'})
+        end
+    end
+})]]
 
 minetest.register_abm({
     nodenames = {"default:leaves", 'default:stone', 'default:dirt', 'default:dirt_with_grass', 'default:sand', 'default:gravel', 'default:sandstone',
