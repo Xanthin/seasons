@@ -359,6 +359,7 @@ minetest.register_abm({
     end
 })]]
 
+-- das wird offenbar für den Frühling benötigt um neue Blätter zu bilden
 local function sign(x)
     if x > 0 then
         return 1
