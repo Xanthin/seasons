@@ -193,6 +193,18 @@ local function vector_resize(v, l)
     return nv
 end
 
+minetest.register_node("seasons:snowblock", {
+    description = "Snow Block",
+    tiles = {"default_snow.png"},
+    is_ground_content = true,
+    freezemelt = "default:water_source",
+    groups = {crumbly=3, melts=1},
+    sounds = default.node_sound_dirt_defaults({
+        footstep = {name="default_snow_footstep", gain=0.25},
+        dug = {name="default_snow_footstep", gain=0.75},
+    }),
+})
+
 minetest.register_craftitem("seasons:snowball", {
     image = "seasons_snowball.png",
     on_drop = function(item, dropper, pos)
