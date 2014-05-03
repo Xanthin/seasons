@@ -105,8 +105,8 @@ minetest.register_chatcommand("setseason", {
 --register nodes
 -------------------
 
-minetest.register_node("seasons:treehead", {
-    description = "Tree Head",
+minetest.register_node("seasons:treetop", {
+    description = "Treetop",
     tiles = {"default_tree_top.png", "default_tree_top.png", "default_tree.png"},
     paramtype2 = "facedir",
     is_ground_content = false,
@@ -272,7 +272,7 @@ minetest.register_node("seasons:puddle", {
 })
 
 minetest.register_on_generated(function(minp, maxp)
-    -- replace top tree block with TREEHEAD
+    -- replace top tree block with TREETOP
     -- TODO: it should definetly be done in sources
     for x = minp.x, maxp.x do
         for z = minp.z, maxp.z do
@@ -281,14 +281,14 @@ minetest.register_on_generated(function(minp, maxp)
                 local y = maxp.y + minp.y - ly
                 if minetest.get_node({x = x, y = y, z = z}).name == "default:tree" then
                     --print("New treenode at "..pp(x, y, z))
-                    minetest.add_node({x = x, y = y, z = z}, {name = "seasons:treehead"})
+                    minetest.add_node({x = x, y = y, z = z}, {name = "seasons:treetop"})
                     local ny = y - 1
                     local t_node = minetest.get_node({x = x, y = ny, z = z})
-                    while t_node.name == "default:tree" or t_node.name == "seasons:treehead" do
-                        -- if there is already treehead below me, it should be removed
-                        if t_node.name == "seasons:treehead" then
+                    while t_node.name == "default:tree" or t_node.name == "seasons:treetop" do
+                        -- if there is already treetop below me, it should be removed
+                        if t_node.name == "seasons:treetop" then
                             minetest.add_node({x = x, y = ny, z = z}, {name = "tree"})
-                            --print("Old treehead removed at "..pp(x, y, z))
+                            --print("Old treetop removed at "..pp(x, y, z))
                         end
                         ny = ny - 1
                         t_node = minetest.get_node({x = x, y = ny, z = z})
@@ -378,7 +378,7 @@ end
 -- TODO: refactor this afwul cycle
 -- (maybe) shuffle something?
 minetest.register_abm({
-    nodenames = {"seasons:treehead"},
+    nodenames = {"seasons:treetop"},
     interval = 5.0,
     chance = 10,
     action = function(pos, node)
@@ -397,7 +397,7 @@ minetest.register_abm({
                         else
                             local d_pos = {x = n_pos.x + dx, y = n_pos.y + dy, z = n_pos.z + dz}
                             local d_node = minetest.get_node(d_pos)
-                            if d_node.name == "default:leaves" or d_node.name == "seasons:treehead" then
+                            if d_node.name == "default:leaves" or d_node.name == "seasons:treetop" then
                                 if math.random(30) == 1 then
                                     modcnt = modcnt + 1
                                     minetest.add_node(n_pos, {name = "default:leaves"})
@@ -482,7 +482,7 @@ minetest.register_abm({
 
 minetest.register_abm({
     nodenames = {"default:leaves", 'default:stone', 'default:dirt', 'default:dirt_with_grass', 'default:sand', 'default:gravel', 'default:sandstone',
-                 'default:clay', 'default:brick', 'default:tree', 'seasons:treehead', 'default:jungletree', 'default:cactus', 'default:glass',
+                 'default:clay', 'default:brick', 'default:tree', 'seasons:treetop', 'default:jungletree', 'default:cactus', 'default:glass',
                  'default:wood', 'default:cobble', 'default:mossycobble'},
     neighbors = {"air"},
     interval = 5.0,
@@ -547,7 +547,7 @@ minetest.register_abm({
 
 -- Remove snow which has air below it
 minetest.register_abm({
-    nodenames = {"seasons:snow","default:snow"},
+    nodenames = {"seasons:snow", "default:snow"},
     interval = 1.0,
     chance = 1,
     action = function(pos, node)
