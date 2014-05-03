@@ -122,7 +122,7 @@ minetest.register_craft({
     }
 })
 
-minetest.register_node("seasons:ice", {
+--[[minetest.register_node("seasons:ice", {
     description = "Ice",
     tiles = {"default_ice.png"},
     is_ground_content = true,
@@ -130,7 +130,7 @@ minetest.register_node("seasons:ice", {
     freezemelt = "default:water_source",
     groups = {cracky=3, melts=1},
     sounds = default.node_sound_glass_defaults(),
-})
+})]]
 
 minetest.register_node("seasons:autumn_leaves", {
     description = "Autumn Leaves",
@@ -511,7 +511,7 @@ minetest.register_abm({
 
 minetest.register_abm({
     -- FIXME: need better way (like getting block temperature?)
-    nodenames = {'default:water_source', 'seasons:ice'},
+    nodenames = {'default:water_source', 'default:ice'},
     neighbors = {"air"},
     interval = 5.0,
     chance = 5,
@@ -523,10 +523,10 @@ minetest.register_abm({
         if minetest.get_node(t_pos).name == "air" and minetest.get_node_light(t_pos, 0.5) == 15 then
             -- Grow ice on water!
             --if math.random(5) == 1 then
-                if node.name == "seasons:ice" then
+                if node.name == "default:ice" then
                     return
                 end
-                minetest.add_node(pos, {name = 'seasons:ice'})
+                minetest.add_node(pos, {name = 'default:ice'})
             --end
         end
     end
@@ -567,7 +567,7 @@ minetest.register_abm({
 })
 
 minetest.register_abm({
-    nodenames = {"seasons:ice"},
+    nodenames = {"default:ice"},
     interval = 1.0,
     chance = 5,
     action = function(pos, node)
@@ -586,7 +586,7 @@ minetest.register_abm({
 })
 
 minetest.register_on_dignode(function(pos, oldnode, digger)
-    if oldnode.name == "seasons:ice" then
+    if oldnode.name == "default:ice" then
         minetest.add_node(pos, {name = "default:water_source"})
     end
 end)
@@ -616,7 +616,7 @@ minetest.register_abm({
 
 minetest.register_abm({
     nodenames = {"group:flora"},
-    neighbors = {"seasons:snow", "seasons:ice"},
+    neighbors = {"seasons:snow", "default:ice"},
     interval = 3.0,
     chance = 1,
     action = function(pos, node)
