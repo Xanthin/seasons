@@ -8,7 +8,7 @@
 local time_to_load = 5
 
 -- How many seconds one season lasts?
-local season_duration = 600
+local season_duration = 1200
 ---------------------------
 
 -- Profiler stuff
@@ -241,41 +241,28 @@ minetest.register_entity("seasons:snowball_flying", {
     end,
 })
 
--- Pfützen für den Herbstregen registrieren, damit sie (und nicht alles flwoing water) verschwinden unf Reste vereisen können 
--- (dabei ACHTUNG: müssen dann aber auch im Frühling verschwinden, weil sonst wieder Wasser entsteht, ohjeh!)
 minetest.register_node("seasons:puddle", {
     description = "Puddle",
-    inventory_image = minetest.inventorycube("default_water.png"),
-    drawtype = "flowingliquid",
+    inventory_image = "default_water.png",
+    drawtype = "nodebox",
     tiles = {"default_water.png"},
-    special_tiles = {
-        {
-            image="default_water_flowing_animated.png",
-            backface_culling=false,
-            animation={type="vertical_frames", aspect_w=16, aspect_h=16, length=0.8}
-        },
-        {
-            image="default_water_flowing_animated.png",
-            backface_culling=true,
-            animation={type="vertical_frames", aspect_w=16, aspect_h=16, length=0.8}
-        },
-    },
     alpha = WATER_ALPHA,
     paramtype = "light",
-    paramtype2 = "flowingliquid",
     walkable = false,
     pointable = false,
     diggable = false,
     buildable_to = true,
     drop = "",
-    drowning = 1,
-    liquidtype = "flowing",
-    liquid_alternative_flowing = "default:water_flowing",
-    liquid_alternative_source = "default:water_source",
+    leveled = 7,
     liquid_viscosity = WATER_VISC,
-    freezemelt = "default:snow",
-    post_effect_color = {a=64, r=100, g=100, b=200},
-    groups = {water=3, liquid=3, puts_out_fire=1, not_in_creative_inventory=1, freezes=1, melt_around=1},
+    freezemelt = "default:ice",
+    node_box = {
+        type = "leveled",
+        fixed = {
+            {-0.5, -0.5, -0.5,  0.5, -0.5+2/16, 0.5},
+        },
+    },
+    groups = {water=3, liquid=3, puts_out_fire=1, not_in_creative_inventory=1, freezes=1, melt_around=1, falling_node=1},
 })
 
 minetest.register_on_generated(function(minp, maxp)
@@ -628,7 +615,7 @@ minetest.register_abm({
 
 minetest.register_abm({ --remove puddles
   nodenames = {"seasons:puddle"},
-  interval = 40,
+  interval = 10,
   chance = 4,
   action = function(pos, node, _, _)
     minetest.remove_node(pos)
