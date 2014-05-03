@@ -547,7 +547,7 @@ minetest.register_abm({
 
 -- Remove snow which has air below it
 minetest.register_abm({
-    nodenames = {"seasons:snow"},
+    nodenames = {"seasons:snow","default:snow"},
     interval = 1.0,
     chance = 1,
     action = function(pos, node)
