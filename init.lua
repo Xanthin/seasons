@@ -619,6 +619,15 @@ minetest.register_abm({
     end
 })
 
+minetest.register_abm({ --remove puddles
+  nodenames = {"seasons:puddle"},
+  interval = 40,
+  chance = 4,
+  action = function(pos, node, _, _)
+    minetest.remove_node(pos)
+  end,
+})
+
 -----------------------------------------------
 -- snowfall im Winter und raindrops im Herbst
 -----------------------------------------------
