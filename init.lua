@@ -210,7 +210,7 @@ minetest.register_craftitem("seasons:snowball", {
     on_drop = function(item, dropper, pos)
         local p = dropper:getpos()
         p.y = p.y + 1
-        local x = minetest.env:add_entity(p, "seasons:snowball_flying")
+        local x = minetest.add_entity(p, "seasons:snowball_flying")
         x:setacceleration({x = 0, y = -10, z = 0})
         local look_dir = dropper:get_look_dir()
         print(pp(look_dir.x, look_dir.y, look_dir.z))
@@ -227,7 +227,7 @@ minetest.register_entity("seasons:snowball_flying", {
     on_step = function(self, dtime)
         local pos = self.object:getpos()
         local bcp = {x=pos.x, y=pos.y-0.7, z=pos.z}
-        local bcn = minetest.env:get_node(bcp)
+        local bcn = minetest.get_node(bcp)
         if bcn.name ~= "air" then
             self.object:remove()
         end
@@ -279,19 +279,19 @@ minetest.register_on_generated(function(minp, maxp)
             for ly = minp.y, maxp.y do
                 -- TODO: fix that
                 local y = maxp.y + minp.y - ly
-                if minetest.env:get_node({x = x, y = y, z = z}).name == "default:tree" then
+                if minetest.get_node({x = x, y = y, z = z}).name == "default:tree" then
                     --print("New treenode at "..pp(x, y, z))
-                    minetest.env:add_node({x = x, y = y, z = z}, {name = "seasons:treehead"})
+                    minetest.add_node({x = x, y = y, z = z}, {name = "seasons:treehead"})
                     local ny = y - 1
-                    local t_node = minetest.env:get_node({x = x, y = ny, z = z})
+                    local t_node = minetest.get_node({x = x, y = ny, z = z})
                     while t_node.name == "default:tree" or t_node.name == "seasons:treehead" do
                         -- if there is already treehead below me, it should be removed
                         if t_node.name == "seasons:treehead" then
-                            minetest.env:add_node({x = x, y = ny, z = z}, {name = "tree"})
+                            minetest.add_node({x = x, y = ny, z = z}, {name = "tree"})
                             --print("Old treehead removed at "..pp(x, y, z))
                         end
                         ny = ny - 1
-                        t_node = minetest.env:get_node({x = x, y = ny, z = z})
+                        t_node = minetest.get_node({x = x, y = ny, z = z})
                     end
                     break
                 else
@@ -337,8 +337,8 @@ minetest.register_abm({
     chance = 10,
     action = function(pos, node)
         if cur_season == "autumn" then
-            minetest.env:remove_node(pos)
-            minetest.env:add_node(pos, {name = "seasons:autumn_leaves"})
+            minetest.remove_node(pos)
+            minetest.add_node(pos, {name = "seasons:autumn_leaves"})
         end
     end
 })
@@ -352,10 +352,10 @@ minetest.register_abm({
     action = function(pos, node)
         if cur_season == "autumn" then
             local b_pos = {x = pos.x, y = pos.y - 1, z = pos.z}
-            if minetest.env:get_node(b_pos).name == "air" then
+            if minetest.get_node(b_pos).name == "air" then
                 if get_season_time() > 2.3 then
-                    minetest.env:remove_node(pos)
-                    minetest.env:add_node(pos, {name = "seasons:autumn_falling_leaves"})
+                    minetest.remove_node(pos)
+                    minetest.add_node(pos, {name = "seasons:autumn_falling_leaves"})
                     nodeupdate_single(pos)
                 end
             end
@@ -389,18 +389,18 @@ minetest.register_abm({
             for y = -1,2 do
             for z = -2,2 do
                 local n_pos = {x = pos.x + x, y = pos.y + y, z = pos.z + z}
-                if minetest.env:get_node(n_pos).name == "air" then
+                if minetest.get_node(n_pos).name == "air" then
                     for dx = -1,1 do
                     for dy = -1,1 do
                     for dz = -1,1 do
                         if (math.abs(sign(dx)) + math.abs(sign(dy)) + math.abs(sign(dz)) == 1) then
                         else
                             local d_pos = {x = n_pos.x + dx, y = n_pos.y + dy, z = n_pos.z + dz}
-                            local d_node = minetest.env:get_node(d_pos)
+                            local d_node = minetest.get_node(d_pos)
                             if d_node.name == "default:leaves" or d_node.name == "seasons:treehead" then
                                 if math.random(30) == 1 then
                                     modcnt = modcnt + 1
-                                    minetest.env:add_node(n_pos, {name = "default:leaves"})
+                                    minetest.add_node(n_pos, {name = "default:leaves"})
                                     if modcnt == 5 then
                                         return
                                     end
@@ -475,7 +475,7 @@ minetest.register_abm({
     chance = 1,
     action = function(pos, node)
         if cur_season ~= "winter" then
-            minetest.env:add_node(pos, {name = 'group:flora'})
+            minetest.add_node(pos, {name = 'group:flora'})
         end
     end
 })]]
@@ -492,11 +492,11 @@ minetest.register_abm({
             return
         end
         local t_pos = {x = pos.x, y = pos.y + 1, z = pos.z}
-        if minetest.env:get_node(t_pos).name == "air" and minetest.env:get_node_light(t_pos, 0.5) == 15 then
+        if minetest.get_node(t_pos).name == "air" and minetest.get_node_light(t_pos, 0.5) == 15 then
             -- Grow snow!
             --if math.random(17 - math.pow(get_season_time(), 2)) == 1 then
                 --print("Growing snow")
-                minetest.env:add_node(t_pos, {name = 'seasons:snow', param2 = 8})
+                minetest.add_node(t_pos, {name = 'seasons:snow', param2 = 8})
             --end
         end
     end
@@ -513,13 +513,13 @@ minetest.register_abm({
             return
         end
         local t_pos = {x = pos.x, y = pos.y + 1, z = pos.z}
-        if minetest.env:get_node(t_pos).name == "air" and minetest.env:get_node_light(t_pos, 0.5) == 15 then
+        if minetest.get_node(t_pos).name == "air" and minetest.get_node_light(t_pos, 0.5) == 15 then
             -- Grow ice on water!
             --if math.random(5) == 1 then
                 if node.name == "seasons:ice" then
                     return
                 end
-                minetest.env:add_node(pos, {name = 'seasons:ice'})
+                minetest.add_node(pos, {name = 'seasons:ice'})
             --end
         end
     end
@@ -534,10 +534,10 @@ minetest.register_abm({
     action = function(pos, node)
         if cur_season ~= "winter" then
             --local b_pos = {x = pos.x, y = pos.y - 1, z = pos.z}
-            --if minetest.env:get_node(b_pos).name == "snow" then
+            --if minetest.get_node(b_pos).name == "snow" then
             --if get_season_time() < 2 then
-            minetest.env:remove_node(pos)
-            minetest.env:add_node(pos, {name = "default:dirt_with_grass"})
+            minetest.remove_node(pos)
+            minetest.add_node(pos, {name = "default:dirt_with_grass"})
             nodeupdate_single(pos)
                 --end
             --end
@@ -552,9 +552,9 @@ minetest.register_abm({
     chance = 1,
     action = function(pos, node)
         local b_pos = {x = pos.x, y = pos.y - 1, z = pos.z}
-        if minetest.env:get_node(b_pos).name == "air" or cur_season ~= "winter" then
+        if minetest.get_node(b_pos).name == "air" or cur_season ~= "winter" then
             --print('Killing snow')
-            minetest.env:remove_node(pos)
+            minetest.remove_node(pos)
         end
     end
 })
@@ -570,17 +570,17 @@ minetest.register_abm({
         if get_season_time() <= 0.2 then
             -- remove ice
             --if math.random(4) == 1 then
-                minetest.env:add_node(pos, {name = 'default:water_source'})
+                minetest.add_node(pos, {name = 'default:water_source'})
             --end
         else
-            minetest.env:add_node(pos, {name = 'default:water_source'})
+            minetest.add_node(pos, {name = 'default:water_source'})
         end
     end
 })
 
 minetest.register_on_dignode(function(pos, oldnode, digger)
     if oldnode.name == "seasons:ice" then
-        minetest.env:add_node(pos, {name = "default:water_source"})
+        minetest.add_node(pos, {name = "default:water_source"})
     end
 end)
 
@@ -590,7 +590,7 @@ minetest.register_abm({
     chance = 1,
     action = function(pos, node)
         if cur_season == "winter" then
-            minetest.env:remove_node(pos)
+            minetest.remove_node(pos)
         end
     end
 })
@@ -602,7 +602,7 @@ minetest.register_abm({
     chance = 1,
     action = function(pos, node)
         if cur_season ~= "autumn" then
-            minetest.env:remove_node(pos)
+            minetest.remove_node(pos)
         end
     end
 })
@@ -614,7 +614,7 @@ minetest.register_abm({
     chance = 1,
     action = function(pos, node)
         if cur_season == "winter" then
-            minetest.env:remove_node(pos)
+            minetest.remove_node(pos)
         end
     end
 })
