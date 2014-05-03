@@ -101,30 +101,40 @@ minetest.register_chatcommand("setseason", {
     end,
 })
 
+-------------------
+--register nodes
+-------------------
+
 minetest.register_node("seasons:treehead", {
-    tile_images = {"default_tree_top.png", "default_tree_top.png", "default_tree.png"},
-    inventory_image = minetest.inventorycube("default_tree_top.png", "default_tree.png", "default_tree.png"),
-    is_ground_content = true,
-    material = minetest.digprop_woodlike(1.0),
-    dug_item = 'node "tree" 1', 
+    description = "Tree Head",
+    tiles = {"default_tree_top.png", "default_tree_top.png", "default_tree.png"},
+    paramtype2 = "facedir",
+    is_ground_content = false,
+    groups = {tree=1,choppy=2,oddly_breakable_by_hand=1,flammable=2},
+    sounds = default.node_sound_wood_defaults(),
+    on_place = minetest.rotate_node
 })
 
 minetest.register_node("seasons:ice", {
-    tile_images = {"seasons_ice.png"},
-    inventory_image = minetest.inventorycube("seasons_ice.png"),
+    description = "Ice",
+    tiles = {"default_ice.png"},
     is_ground_content = true,
-    material = minetest.digprop_woodlike(1.0),
-    dug_item = '', 
+    paramtype = "light",
+    freezemelt = "default:water_source",
+    groups = {cracky=3, melts=1},
+    sounds = default.node_sound_glass_defaults(),
 })
 
 minetest.register_node("seasons:autumn_leaves", {
+    description = "Autumn Leaves",
     drawtype = "allfaces_optional",
     visual_scale = 1.3,
-    tile_images = {"seasons_autumn_leaves.png"},
-    inventory_image = minetest.inventorycube("seasons_autumn_leaves.png"),
+    tiles = {"seasons_autumn_leaves.png"},
     paramtype = "light",
-    material = minetest.digprop_leaveslike(0.5),
-    dug_item = ''
+    waving = 1,
+    is_ground_content = false,
+    groups = {snappy=3, leafdecay=3, flammable=2, leaves=1, not_in_creative_inventory=1},
+    sounds = default.node_sound_leaves_defaults(),
 })
 
 --[[minetest.register_node("seasons:autumn_falling_leaves", {
@@ -140,19 +150,35 @@ minetest.register_node("seasons:autumn_leaves", {
 })]]
 
 minetest.register_node("seasons:snow", {
-    drawtype = "signlike",
-    tile_images = {"seasons_snow.png"},
-    inventory_image = "seasons_snow.png",
-    paramtype = "light",
+    description = "Snow",
+    tiles = {"default_snow.png"},
+    inventory_image = "default_snowball.png",
+    wield_image = "default_snowball.png",
     is_ground_content = true,
-    wall_mounted = true,
-    walkable = false,
-    selection_box = {
-        type = "wallmounted",
+    paramtype = "light",
+    buildable_to = true,
+    leveled = 7,
+    drawtype = "nodebox",
+    freezemelt = "default:water_flowing",
+    node_box = {
+        type = "leveled",
+        fixed = {
+            {-0.5, -0.5, -0.5,  0.5, -0.5+2/16, 0.5},
+        },
     },
-    material = minetest.digprop_dirtlike(0.4),
-    dug_item = ''
+    groups = {crumbly=3,falling_node=1, melts=1, float=1},
+    sounds = default.node_sound_dirt_defaults({
+        footstep = {name="default_snow_footstep", gain=0.25},
+        dug = {name="default_snow_footstep", gain=0.75},
+    }),
+    on_construct = function(pos)
+        pos.y = pos.y - 1
+        if minetest.get_node(pos).name == "default:dirt_with_grass" then
+            minetest.set_node(pos, {name="default:dirt_with_snow"})
+        end
+    end,
 })
+minetest.register_alias("snow", "default:snow")
 
 local function vector_length(v)
     return math.sqrt(v.x*v.x + v.y*v.y + v.z*v.z)
