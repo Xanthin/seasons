@@ -525,6 +525,26 @@ minetest.register_abm({
     end
 })
 
+-- Erde mit Schnee wird in Erde mit Gras gewandelt
+minetest.register_abm({
+    nodenames = {"default:dirt_with_snow"},
+    --neighbors = {"air"},
+    interval = 5.0,
+    chance = 10,
+    action = function(pos, node)
+        if cur_season ~= "winter" then
+            --local b_pos = {x = pos.x, y = pos.y - 1, z = pos.z}
+            --if minetest.env:get_node(b_pos).name == "snow" then
+            --if get_season_time() < 2 then
+            minetest.env:remove_node(pos)
+            minetest.env:add_node(pos, {name = "default:dirt_with_grass"})
+            nodeupdate_single(pos)
+                --end
+            --end
+        end
+    end
+})
+
 -- Remove snow which has air below it
 minetest.register_abm({
     nodenames = {"seasons:snow"},
