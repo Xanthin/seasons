@@ -115,6 +115,13 @@ minetest.register_node("seasons:treetop", {
     on_place = minetest.rotate_node
 })
 
+minetest.register_craft({
+    output = 'default:stick 4',
+    recipe = {
+        {'seasons:treetop'},
+    }
+})
+
 minetest.register_node("seasons:ice", {
     description = "Ice",
     tiles = {"default_ice.png"},
