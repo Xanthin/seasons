@@ -2,5 +2,3 @@ Texture files of the original mod
 (but I can´t upload in browser)
 
 seasons_autumn_leaves.png
-seasons_ice.png
-seasons_snow.png
