@@ -442,9 +442,11 @@ minetest.register_abm({
 
 -- create snow on top of this nodes in winter:
 minetest.register_abm({
-    nodenames = {"default:leaves", 'default:stone', 'default:dirt', 'default:dirt_with_grass', 'default:sand', 'default:gravel', 'default:sandstone',
+    nodenames = {"group:soil", "default:sand", "default:gravel", "default:clay", "group:cracky", 
+                    "group:choppy", "group:oddly_breakable_by_hand", "group:bendy"}, -- this should cover more non default blocks from other mods with snow
+    --[[nodenames = {"default:leaves", 'default:stone', 'default:dirt', 'default:dirt_with_grass', 'default:sand', 'default:gravel', 'default:sandstone',
                  'default:clay', 'default:brick', 'default:tree', 'seasons:treetop', 'default:jungletree', 'default:cactus', 'default:glass',
-                 'default:wood', 'default:cobble', 'default:mossycobble'},
+                 'default:wood', 'default:cobble', 'default:mossycobble'},]]
     neighbors = {"air"},
     interval = 5.0,
     chance = 25,
