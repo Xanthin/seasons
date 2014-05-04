@@ -382,7 +382,7 @@ minetest.register_abm({
                 if get_season_time() > 2.3 then
                     minetest.remove_node(pos)
                     minetest.add_node(pos, {name = "seasons:autumn_falling_leaves"})
-                    nodeupdate_single(pos)
+                    nodeupdate_single(pos) --in dev wiki = nodeupdate(), in vanessas leavedecay = nodeupdate(pos)
                 end
             end
         end
