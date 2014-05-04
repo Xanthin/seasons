@@ -69,9 +69,9 @@ local cur_season = ""
     end
 end]]
 
------------------------------------------------
+-------------------------------------------------------
 -- privilege and chatcommand for easy season changes
------------------------------------------------
+-------------------------------------------------------
 
 minetest.register_privilege("seasons", {
 description = "Change the season",
@@ -173,7 +173,7 @@ minetest.register_node("seasons:snow", {
             {-0.5, -0.5, -0.5,  0.5, -0.5+2/16, 0.5},
         },
     },
-    groups = {crumbly=3,falling_node=1, melts=1, float=1},
+    groups = {crumbly=3, falling_node=1, melts=1, float=1},
     sounds = default.node_sound_dirt_defaults({
         footstep = {name="default_snow_footstep", gain=0.25},
         dug = {name="default_snow_footstep", gain=0.75},
@@ -319,11 +319,23 @@ minetest.register_globalstep(function(dtime)
     end
 end)
 
---------
--- abm
---------
+--------------
+-- leaves
+--------------
 
--- leaves become orange in autumn
+-- no autumn leaves beyond autumn:
+minetest.register_abm({
+    nodenames = {"seasons:autumn_leaves"--[[, "seasons:autumn_falling_leaves"]]}, -- auskommentiert, weil keine blätter fallen sollen
+    interval = 3.0,
+    chance = 1,
+    action = function(pos, node)
+        if cur_season ~= "autumn" then
+            minetest.remove_node(pos)
+        end
+    end
+})
+
+-- leaves become orange in autumn:
 minetest.register_abm({
     nodenames = {"default:leaves"},
     neighbors = {"air", "seasons:autumn_leaves"},
@@ -337,8 +349,8 @@ minetest.register_abm({
     end
 })
 
---[[ leaves fall in autumn:
-minetest.register_abm({
+-- leaves fall in autumn:
+--[[minetest.register_abm({
     nodenames = {"seasons:autumn_leaves"},
     neighbors = {"air"},
     interval = 5.0,
@@ -357,7 +369,19 @@ minetest.register_abm({
     end
 })]]
 
--- das wird offenbar für den Frühling benötigt um neue Blätter zu bilden
+-- leaves disappear in winter:
+minetest.register_abm({
+    nodenames = {"default:leaves"},
+    interval = 3.0,
+    chance = 1,
+    action = function(pos, node)
+        if cur_season == "winter" then
+            minetest.remove_node(pos)
+        end
+    end
+})
+
+-- this is obviously needed to regrow the leaves in spring:
 local function sign(x)
     if x > 0 then
         return 1
@@ -412,15 +436,137 @@ minetest.register_abm({
     end
 })
 
--- flowers grow in spring from default flowers\init.lua i=50,chance=25
+--------------
+-- snow
+--------------
+
+-- create snow on top of this nodes in winter:
+minetest.register_abm({
+    nodenames = {"default:leaves", 'default:stone', 'default:dirt', 'default:dirt_with_grass', 'default:sand', 'default:gravel', 'default:sandstone',
+                 'default:clay', 'default:brick', 'default:tree', 'seasons:treetop', 'default:jungletree', 'default:cactus', 'default:glass',
+                 'default:wood', 'default:cobble', 'default:mossycobble'},
+    neighbors = {"air"},
+    interval = 5.0,
+    chance = 25,
+    action = function(pos, node)
+        if cur_season ~= "winter" then
+            return
+        end
+        local t_pos = {x = pos.x, y = pos.y + 1, z = pos.z}
+        if minetest.get_node(t_pos).name == "air" and minetest.get_node_light(t_pos, 0.5) == 15 then
+            -- Grow snow!
+            --if math.random(17 - math.pow(get_season_time(), 2)) == 1 then
+                --print("Growing snow")
+                minetest.add_node(t_pos, {name = 'seasons:snow', param2 = 8})
+            --end
+        end
+    end
+})
+
+-- convert dirt with snow in dirt with gras when it´s not winter:
+minetest.register_abm({
+    nodenames = {"default:dirt_with_snow"},
+    interval = 5.0,
+    chance = 10,
+    action = function(pos, node)
+        if cur_season == "winter" then
+            return
+        end
+        local b_pos = {x = pos.x, y = pos.y + 1, z = pos.z}
+        if minetest.get_node(b_pos).name == "air" and minetest.get_node_light(b_pos, 0.5) == 15 and cur_season ~= "winter" then
+            --if get_season_time() < 2 then
+            minetest.remove_node(pos)
+            minetest.add_node(pos, {name = "default:dirt_with_grass"})
+            --nodeupdate_single(pos)
+        end
+    end
+})
+
+-- Remove snow when it´s not winter:
+minetest.register_abm({
+    nodenames = {"seasons:snow", "default:snow"},
+    interval = 5.0,
+    chance = 25,
+    action = function(pos, node)
+        if cur_season == "winter" then
+            return
+        end
+        local b_pos = {x = pos.x, y = pos.y - 1, z = pos.z}
+        if cur_season ~= "winter" then
+            --print('Killing snow')
+            minetest.remove_node(pos)
+        end
+    end
+})
+
+--------------
+-- ice
+--------------
+
+-- convert water into ice in winter:
+minetest.register_abm({
+    -- FIXME: need better way (like getting block temperature?)
+    nodenames = {'default:water_source', 'default:ice'},
+    neighbors = {"air"},
+    interval = 5.0,
+    chance = 5,
+    action = function(pos, node)
+        if cur_season ~= "winter" then
+            return
+        end
+        local t_pos = {x = pos.x, y = pos.y + 1, z = pos.z}
+        if minetest.get_node(t_pos).name == "air" and minetest.get_node_light(t_pos, 0.5) == 15 then
+            -- Grow ice on water!
+            --if math.random(5) == 1 then
+                if node.name == "default:ice" then
+                    return
+                end
+                minetest.add_node(pos, {name = 'default:ice'})
+            --end
+        end
+    end
+})
+
+-- convert ice in water when it´s not winter:
+minetest.register_abm({
+    nodenames = {"default:ice"},
+    interval = 1.0,
+    chance = 5,
+    action = function(pos, node)
+        if cur_season == "winter" then
+            return
+        end
+        if get_season_time() <= 0.2 then
+            -- remove ice
+            --if math.random(4) == 1 then
+                minetest.add_node(pos, {name = 'default:water_source'})
+            --end
+        else
+            minetest.add_node(pos, {name = 'default:water_source'})
+        end
+    end
+})
+
+-- if ice is digged make water in the hole:
+minetest.register_on_dignode(function(pos, oldnode, digger)
+    if oldnode.name == "default:ice" then
+        minetest.add_node(pos, {name = "default:water_source"})
+    end
+end)
+
+------------------------
+-- flora
+------------------------
+
+-- flora grows in spring (from default flowers\init.lua i=50,chance=25)
 minetest.register_abm({
     nodenames = {"group:flora"},
     neighbors = {"default:dirt_with_grass", "default:desert_sand"},
-    interval = 2,
-    chance = 5,
+    interval = 10,
+    chance = 25,
     action = function(pos, node)
         if cur_season == "spring" then
-            print("Spring time!")
+            --print("Spring time!")
             pos.y = pos.y - 1
             local under = minetest.get_node(pos)
             pos.y = pos.y + 1
@@ -462,148 +608,9 @@ minetest.register_abm({
     end,
 })
 
---[[minetest.register_abm({
-    nodenames = {"group:flora"},
-    neighbors = {"air", "default:dirt_with_grass"},
-    interval = 3.0,
-    chance = 1,
-    action = function(pos, node)
-        if cur_season ~= "winter" then
-            minetest.add_node(pos, {name = 'group:flora'})
-        end
-    end
-})]]
-
-minetest.register_abm({
-    nodenames = {"default:leaves", 'default:stone', 'default:dirt', 'default:dirt_with_grass', 'default:sand', 'default:gravel', 'default:sandstone',
-                 'default:clay', 'default:brick', 'default:tree', 'seasons:treetop', 'default:jungletree', 'default:cactus', 'default:glass',
-                 'default:wood', 'default:cobble', 'default:mossycobble'},
-    neighbors = {"air"},
-    interval = 5.0,
-    chance = 25,
-    action = function(pos, node)
-        if cur_season ~= "winter" then
-            return
-        end
-        local t_pos = {x = pos.x, y = pos.y + 1, z = pos.z}
-        if minetest.get_node(t_pos).name == "air" and minetest.get_node_light(t_pos, 0.5) == 15 then
-            -- Grow snow!
-            --if math.random(17 - math.pow(get_season_time(), 2)) == 1 then
-                --print("Growing snow")
-                minetest.add_node(t_pos, {name = 'seasons:snow', param2 = 8})
-            --end
-        end
-    end
-})
-
-minetest.register_abm({
-    -- FIXME: need better way (like getting block temperature?)
-    nodenames = {'default:water_source', 'default:ice'},
-    neighbors = {"air"},
-    interval = 5.0,
-    chance = 5,
-    action = function(pos, node)
-        if cur_season ~= "winter" then
-            return
-        end
-        local t_pos = {x = pos.x, y = pos.y + 1, z = pos.z}
-        if minetest.get_node(t_pos).name == "air" and minetest.get_node_light(t_pos, 0.5) == 15 then
-            -- Grow ice on water!
-            --if math.random(5) == 1 then
-                if node.name == "default:ice" then
-                    return
-                end
-                minetest.add_node(pos, {name = 'default:ice'})
-            --end
-        end
-    end
-})
-
--- Erde mit Schnee wird in Erde mit Gras gewandelt
-minetest.register_abm({
-    nodenames = {"default:dirt_with_snow"},
-    --neighbors = {"air"},
-    interval = 5.0,
-    chance = 10,
-    action = function(pos, node)
-        if cur_season ~= "winter" then
-            --local b_pos = {x = pos.x, y = pos.y - 1, z = pos.z}
-            --if minetest.get_node(b_pos).name == "snow" then
-            --if get_season_time() < 2 then
-            minetest.remove_node(pos)
-            minetest.add_node(pos, {name = "default:dirt_with_grass"})
-            nodeupdate_single(pos)
-                --end
-            --end
-        end
-    end
-})
-
--- Remove snow which has air below it
-minetest.register_abm({
-    nodenames = {"seasons:snow", "default:snow"},
-    interval = 1.0,
-    chance = 1,
-    action = function(pos, node)
-        local b_pos = {x = pos.x, y = pos.y - 1, z = pos.z}
-        if minetest.get_node(b_pos).name == "air" or cur_season ~= "winter" then
-            --print('Killing snow')
-            minetest.remove_node(pos)
-        end
-    end
-})
-
-minetest.register_abm({
-    nodenames = {"default:ice"},
-    interval = 1.0,
-    chance = 5,
-    action = function(pos, node)
-        if cur_season == "winter" then
-            return
-        end
-        if get_season_time() <= 0.2 then
-            -- remove ice
-            --if math.random(4) == 1 then
-                minetest.add_node(pos, {name = 'default:water_source'})
-            --end
-        else
-            minetest.add_node(pos, {name = 'default:water_source'})
-        end
-    end
-})
-
-minetest.register_on_dignode(function(pos, oldnode, digger)
-    if oldnode.name == "default:ice" then
-        minetest.add_node(pos, {name = "default:water_source"})
-    end
-end)
-
-minetest.register_abm({
-    nodenames = {"default:leaves"},
-    interval = 3.0,
-    chance = 1,
-    action = function(pos, node)
-        if cur_season == "winter" then
-            minetest.remove_node(pos)
-        end
-    end
-})
-
--- auskommentiert, weil keine blätter fallen sollen
-minetest.register_abm({
-    nodenames = {"seasons:autumn_leaves"--[[, "seasons:autumn_falling_leaves"]]},
-    interval = 3.0,
-    chance = 1,
-    action = function(pos, node)
-        if cur_season ~= "autumn" then
-            minetest.remove_node(pos)
-        end
-    end
-})
-
 minetest.register_abm({
     nodenames = {"group:flora"},
-    neighbors = {"seasons:snow", "default:ice"},
+    neighbors = {"seasons:snow", "default:snow", "default:ice"},
     interval = 3.0,
     chance = 1,
     action = function(pos, node)
@@ -613,7 +620,12 @@ minetest.register_abm({
     end
 })
 
-minetest.register_abm({ --remove puddles
+------------------------
+-- puddle
+------------------------
+
+--remove puddles after a time
+minetest.register_abm({
   nodenames = {"seasons:puddle"},
   interval = 10,
   chance = 4,
@@ -622,9 +634,9 @@ minetest.register_abm({ --remove puddles
   end,
 })
 
------------------------------------------------
--- snowfall im Winter und raindrops im Herbst
------------------------------------------------
+-----------------------------
+-- snowfall and raindrops
+-----------------------------
 
 -- ToDo: Parameter finden, die nicht benötigt werden
 
@@ -663,7 +675,7 @@ local HUT = -4 -- Humidity threshold for rain
 
 -- Stuff
 
-snowdrift = {}
+--snowdrift = {}
 
 -- Globalstep function
 
