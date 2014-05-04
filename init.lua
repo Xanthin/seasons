@@ -69,6 +69,30 @@ local cur_season = ""
     end
 end]]
 
+local delta = 0.0
+minetest.register_globalstep(function(dtime)
+    delta = delta + dtime
+    if delta > 5 then
+        local time = get_season_time() + delta / season_duration
+        set_season_time(time)
+        if time >= 4 then
+            set_season_time(time - 4)
+            time = time - 4
+        end
+        if time < 1 then
+            cur_season = "spring"
+        elseif time < 2 then
+            cur_season = "summer"
+        elseif time < 3 then
+            cur_season = "autumn"
+        else
+            cur_season = "winter"
+        end
+        print(cur_season.." "..time)
+        delta = 0
+    end
+end)
+
 -------------------------------------------------------
 -- privilege and chatcommand for easy season changes
 -------------------------------------------------------
@@ -105,24 +129,7 @@ minetest.register_chatcommand("setseason", {
 --register nodes
 -------------------
 
-minetest.register_node("seasons:treetop", {
-    description = "Treetop",
-    tiles = {"default_tree_top.png", "default_tree_top.png", "default_tree.png"},
-    paramtype2 = "facedir",
-    is_ground_content = false,
-    groups = {tree=1,choppy=2,oddly_breakable_by_hand=1,flammable=2},
-    sounds = default.node_sound_wood_defaults(),
-    on_place = minetest.rotate_node
-})
-
-minetest.register_craft({
-    output = 'default:stick 4',
-    recipe = {
-        {'seasons:treetop'},
-    }
-})
-
---[[minetest.register_node("seasons:ice", {
+--[[minetest.register_node(":default:ice", {
     description = "Ice",
     tiles = {"default_ice.png"},
     is_ground_content = true,
@@ -187,19 +194,6 @@ minetest.register_node("seasons:snow", {
 })
 minetest.register_alias("snow", "default:snow")
 
-local function vector_length(v)
-    return math.sqrt(v.x*v.x + v.y*v.y + v.z*v.z)
-end
-
-local function vector_resize(v, l)
-    local s = vector_length(v)
-    nv = {x = 0.0, y = 0.0, z = 0.0}
-    nv.x = v.x / s * l
-    nv.y = v.y / s * l
-    nv.z = v.z / s * l
-    return nv
-end
-
 minetest.register_node("seasons:snowblock", {
     description = "Snow Block",
     tiles = {"default_snow.png"},
@@ -211,6 +205,19 @@ minetest.register_node("seasons:snowblock", {
         dug = {name="default_snow_footstep", gain=0.75},
     }),
 })
+
+local function vector_length(v)         -- is needed for the snowball
+    return math.sqrt(v.x*v.x + v.y*v.y + v.z*v.z)
+end
+
+local function vector_resize(v, l)
+    local s = vector_length(v)
+    nv = {x = 0.0, y = 0.0, z = 0.0}
+    nv.x = v.x / s * l
+    nv.y = v.y / s * l
+    nv.z = v.z / s * l
+    return nv
+end
 
 minetest.register_craftitem("seasons:snowball", {
     image = "seasons_snowball.png",
@@ -265,6 +272,23 @@ minetest.register_node("seasons:puddle", {
     groups = {water=3, liquid=3, puts_out_fire=1, not_in_creative_inventory=1, freezes=1, melt_around=1, falling_node=1},
 })
 
+minetest.register_node("seasons:treetop", {
+    description = "Treetop",
+    tiles = {"default_tree_top.png", "default_tree_top.png", "default_tree.png"},
+    paramtype2 = "facedir",
+    is_ground_content = false,
+    groups = {tree=1,choppy=2,oddly_breakable_by_hand=1,flammable=2},
+    sounds = default.node_sound_wood_defaults(),
+    on_place = minetest.rotate_node
+})
+
+minetest.register_craft({
+    output = 'default:stick 4',
+    recipe = {
+        {'seasons:treetop'},
+    }
+})
+
 minetest.register_on_generated(function(minp, maxp)
     -- replace top tree block with TREETOP
     -- TODO: it should definetly be done in sources
@@ -295,37 +319,13 @@ minetest.register_on_generated(function(minp, maxp)
     end
 end)
 
-local delta = 0.0
-minetest.register_globalstep(function(dtime)
-    delta = delta + dtime
-    if delta > 5 then
-        local time = get_season_time() + delta / season_duration
-        set_season_time(time)
-        if time >= 4 then
-            set_season_time(time - 4)
-            time = time - 4
-        end
-        if time < 1 then
-            cur_season = "spring"
-        elseif time < 2 then
-            cur_season = "summer"
-        elseif time < 3 then
-            cur_season = "autumn"
-        else
-            cur_season = "winter"
-        end
-        print(cur_season.." "..time)
-        delta = 0
-    end
-end)
-
 --------------
 -- leaves
 --------------
 
 -- no autumn leaves beyond autumn:
 minetest.register_abm({
-    nodenames = {"seasons:autumn_leaves"--[[, "seasons:autumn_falling_leaves"]]}, -- auskommentiert, weil keine blätter fallen sollen
+    nodenames = {"seasons:autumn_leaves", "seasons:autumn_falling_leaves"},
     interval = 3.0,
     chance = 1,
     action = function(pos, node)
@@ -463,7 +463,7 @@ minetest.register_abm({
     end
 })
 
--- convert dirt with snow in dirt with gras when it´s not winter:
+-- convert dirt with snow in dirt with grass when it´s not winter:
 minetest.register_abm({
     nodenames = {"default:dirt_with_snow"},
     interval = 5.0,
@@ -473,7 +473,7 @@ minetest.register_abm({
             return
         end
         local b_pos = {x = pos.x, y = pos.y + 1, z = pos.z}
-        if minetest.get_node(b_pos).name == "air" and minetest.get_node_light(b_pos, 0.5) == 15 and cur_season ~= "winter" then
+        if minetest.get_node(b_pos).name == "air" and minetest.get_node_light(b_pos, 0.5) == 15 then--and cur_season ~= "winter" then
             --if get_season_time() < 2 then
             minetest.remove_node(pos)
             minetest.add_node(pos, {name = "default:dirt_with_grass"})
@@ -486,7 +486,7 @@ minetest.register_abm({
 minetest.register_abm({
     nodenames = {"seasons:snow", "default:snow"},
     interval = 5.0,
-    chance = 25,
+    chance = 10,
     action = function(pos, node)
         if cur_season == "winter" then
             return
@@ -562,7 +562,7 @@ end)
 minetest.register_abm({
     nodenames = {"group:flora"},
     neighbors = {"default:dirt_with_grass", "default:desert_sand"},
-    interval = 10,
+    interval = 15,
     chance = 25,
     action = function(pos, node)
         if cur_season == "spring" then
@@ -680,10 +680,10 @@ local HUT = -4 -- Humidity threshold for rain
 -- Globalstep function
 
 minetest.register_globalstep(function(dtime)
-    local perlinp = minetest.get_perlin(813, 1, 0.5, SCALP)
-    if perlinp:get2d({x = os.clock()/60, y = 0}) < PRET then
+    --[[local perlinp = minetest.get_perlin(813, 1, 0.5, SCALP)  -- controls when there is precipitation, 
+    if perlinp:get2d({x = os.clock()/60, y = 0}) < PRET then -- 'os.clock' is time in seconds since server start
         return
-    end 
+    end]]
     for _, player in ipairs(minetest.get_connected_players()) do
         if math.random() > PPPCHA then
             return
