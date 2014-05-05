@@ -200,7 +200,7 @@ minetest.register_node("seasons:snow", {
             {-0.5, -0.5, -0.5,  0.5, -0.5+2/16, 0.5},
         },
     },
-    groups = {crumbly=3, falling_node=1, melts=1, float=1},
+    groups = {crumbly=3, falling_node=1, melts=3, float=1},
     sounds = default.node_sound_dirt_defaults({
         footstep = {name="default_snow_footstep", gain=0.25},
         dug = {name="default_snow_footstep", gain=0.75},
@@ -219,14 +219,12 @@ minetest.register_node("seasons:snow", {
     end,
 })
 
-minetest.register_alias("snow", "default:snow")
-
 minetest.register_node("seasons:snowblock", {
     description = "Snow Block",
     tiles = {"default_snow.png"},
     is_ground_content = true,
     freezemelt = "default:water_source",
-    groups = {crumbly=3, melts=1},
+    groups = {crumbly=3, melts=2},
     sounds = default.node_sound_dirt_defaults({
         footstep = {name="default_snow_footstep", gain=0.25},
         dug = {name="default_snow_footstep", gain=0.75},
@@ -551,7 +549,7 @@ minetest.register_abm({
             --if math.random(4) == 1 then
                 minetest.add_node(pos, {name = 'default:water_source'})
             --end
-        else
+        else  -- macht das überhaupt Sinn?!
             minetest.add_node(pos, {name = 'default:water_source'})
         end
     end
@@ -642,6 +640,55 @@ minetest.register_abm({
   action = function(pos, node, _, _)
     minetest.remove_node(pos)
   end,
+})
+
+------------------------
+-- Melting/Freezing
+------------------------
+
+--Melting
+--Any node part of the group melting will melt when near warm nodes such as lava, fire, torches, etc.
+--The amount of water that replaces the node is defined by the number on the group:
+--1: one water_source
+--2: four water_flowings
+--3: one water_flowing
+minetest.register_abm({
+    nodenames = {"group:melts"},
+    neighbors = {"group:igniter","default:torch","default:furnace_active","group:hot"},
+    interval = 2,
+    chance = 2,
+    action = function(pos, node, active_object_count, active_object_count_wider)
+        local intensity = minetest.get_item_group(node.name,"melts")
+        if intensity == 1 then
+            minetest.add_node(pos,{name="default:water_source"})
+        elseif intensity == 2 then
+            local check_place = function(pos,node)
+                if minetest.get_node(pos).name == "air" then
+                    minetest.place_node(pos,node)
+                end
+            end
+            minetest.add_node(pos,{name="default:water_flowing"})
+            check_place({x=pos.x+1,y=pos.y,z=pos.z},{name="default:water_flowing"})
+            check_place({x=pos.x-1,y=pos.y,z=pos.z},{name="default:water_flowing"})
+            check_place({x=pos.x,y=pos.y+1,z=pos.z},{name="default:water_flowing"})
+            check_place({x=pos.x,y=pos.y-1,z=pos.z},{name="default:water_flowing"})
+        elseif intensity == 3 then
+            minetest.add_node(pos,{name="default:water_flowing"})
+        end
+        nodeupdate(pos)
+    end,
+})
+
+--Freezing
+--Water freezes when in contact with snow.
+minetest.register_abm({
+    nodenames = {"default:water_source"}, -- group:water? or freezes?
+    neighbors = {"default:snow", "default:snowblock", "seasons:snow"},
+    interval = 20,
+    chance = 4,
+    action = function(pos, node, active_object_count, active_object_count_wider)
+        minetest.add_node(pos,{name="default:ice"})
+    end,
 })
 
 -----------------------------
