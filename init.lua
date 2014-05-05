@@ -211,7 +211,14 @@ minetest.register_node("seasons:snow", {
             minetest.set_node(pos, {name="default:dirt_with_snow"})
         end
     end,
+    after_destruct = function(pos)
+        pos.y = pos.y - 1
+        if minetest.get_node(pos).name == "default:dirt_with_snow" then
+            minetest.set_node(pos, {name="default:dirt_with_grass"})
+        end
+    end,
 })
+
 minetest.register_alias("snow", "default:snow")
 
 minetest.register_node("seasons:snowblock", {
@@ -481,25 +488,6 @@ minetest.register_abm({
                 --print("Growing snow")
                 minetest.add_node(t_pos, {name = 'seasons:snow', param2 = 8})
             --end
-        end
-    end
-})
-
--- convert dirt with snow in dirt with grass when it´s not winter:
-minetest.register_abm({
-    nodenames = {"default:dirt_with_snow"},
-    interval = 5.0,
-    chance = 10,
-    action = function(pos, node)
-        if cur_season == "winter" then
-            return
-        end
-        local b_pos = {x = pos.x, y = pos.y + 1, z = pos.z}
-        if minetest.get_node(b_pos).name == "air" and minetest.get_node_light(b_pos, 0.5) == 15 then--and cur_season ~= "winter" then
-            --if get_season_time() < 2 then
-            minetest.remove_node(pos)
-            minetest.add_node(pos, {name = "default:dirt_with_grass"})
-            --nodeupdate_single(pos)
         end
     end
 })
